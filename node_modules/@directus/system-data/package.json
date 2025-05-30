@@ -1,0 +1,37 @@
+{
+  "name": "@directus/system-data",
+  "version": "3.1.0",
+  "description": "Definitions and types for Directus system collections",
+  "homepage": "https://directus.io",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/directus/directus.git",
+    "directory": "packages/system-data"
+  },
+  "funding": "https://github.com/directus/directus?sponsor=1",
+  "license": "MIT",
+  "author": "Tim de Heiden <tim@directus.io>",
+  "type": "module",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "main": "dist/index.js",
+  "files": [
+    "dist"
+  ],
+  "devDependencies": {
+    "@directus/tsconfig": "3.0.0",
+    "esbuild": "0.25.0",
+    "esbuild-yaml": "2.0.0",
+    "tsup": "8.4.0",
+    "typescript": "5.8.2"
+  },
+  "scripts": {
+    "build": "NODE_ENV=production tsup",
+    "dev": "NODE_ENV=development tsup"
+  }
+}
