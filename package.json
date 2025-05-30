@@ -1,0 +1,111 @@
+{
+	"name": "directus-brazilian-standards",
+	"version": "1.1.0",
+	"description": "Complete Brazilian formatting extensions for Directus - Currency (BRL), Postal Codes (CEP), and Tax IDs (CPF/CNPJ) with interfaces and displays",
+	"keywords": [
+		"directus",
+		"directus-extension",
+		"directus-marketplace",
+		"brazil",
+		"brazilian",
+		"brasil",
+		"brl",
+		"currency",
+		"real",
+		"cep",
+		"postal-code",
+		"cpf",
+		"cnpj",
+		"tax-id",
+		"business-id",
+		"formatting",
+		"validation",
+		"locale",
+		"pt-br",
+		"interface",
+		"display"
+	],
+	"author": {
+		"name": "Bruno Ribeiro",
+		"email": "bruno@directus-renovando.com",
+		"url": "https://github.com/brunribeiro"
+	},
+	"license": "MIT",
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/brunribeiro/directus-brazilian-standards"
+	},
+	"homepage": "https://github.com/brunribeiro/directus-brazilian-standards#readme",
+	"bugs": {
+		"url": "https://github.com/brunribeiro/directus-brazilian-standards/issues"
+	},
+	"type": "module",
+	"files": [
+		"dist",
+		"README.md",
+		"LICENSE"
+	],
+	"directus:extension": {
+		"type": "bundle",
+		"path": {
+			"app": "dist/app.js",
+			"api": "dist/api.js"
+		},
+		"entries": [
+			{
+				"type": "interface",
+				"name": "brazilian-currency",
+				"source": "src/interfaces/currency/index.ts"
+			},
+			{
+				"type": "display",
+				"name": "brazilian-currency-display",
+				"source": "src/displays/currency/index.ts"
+			},
+			{
+				"type": "interface",
+				"name": "brazilian-cep",
+				"source": "src/interfaces/cep/index.ts"
+			},
+			{
+				"type": "display",
+				"name": "brazilian-cep-display",
+				"source": "src/displays/cep/index.ts"
+			},
+			{
+				"type": "interface",
+				"name": "brazilian-cpf",
+				"source": "src/interfaces/cpf/index.ts"
+			},
+			{
+				"type": "display",
+				"name": "brazilian-cpf-display",
+				"source": "src/displays/cpf/index.ts"
+			},
+			{
+				"type": "interface",
+				"name": "brazilian-cnpj",
+				"source": "src/interfaces/cnpj/index.ts"
+			},
+			{
+				"type": "display",
+				"name": "brazilian-cnpj-display",
+				"source": "src/displays/cnpj/index.ts"
+			}
+		],
+		"host": "^10.10.0"
+	},
+	"scripts": {
+		"build": "directus-extension build",
+		"dev": "directus-extension build -w --no-minify",
+		"link": "directus-extension link",
+		"validate": "directus-extension validate",
+		"prepublishOnly": "npm run build"
+	},
+	"devDependencies": {
+		"@directus/extensions-sdk": "13.1.1"
+	},
+	"engines": {
+		"node": ">=18.0.0"
+	}
+}
