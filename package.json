@@ -33,7 +33,7 @@
 	"license": "MIT",
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/brunribeiro/directus-brazilian-standards"
+		"url": "git+https://github.com/brunribeiro/directus-brazilian-standards.git"
 	},
 	"homepage": "https://github.com/brunribeiro/directus-brazilian-standards#readme",
 	"bugs": {
