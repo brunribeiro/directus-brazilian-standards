@@ -96,6 +96,14 @@ const validateValue = (value: string): boolean => {
 };
 
 const updateValue = (newValue: string) => {
+	if (!newValue || newValue.trim() === '') {
+		emit('input', null);
+		hasError.value = false;
+		errorMessage.value = '';
+		isValid.value = false;
+		return;
+	}
+	
 	// Format the CEP as user types
 	const formatted = formatCEP(newValue);
 	
@@ -119,11 +127,12 @@ const onBlur = () => {
 const onKeyDown = (event: KeyboardEvent) => {
 	// Allow: backspace, delete, tab, escape, enter
 	if ([8, 9, 27, 13, 46].indexOf(event.keyCode) !== -1 ||
-		// Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X
-		(event.keyCode === 65 && event.ctrlKey === true) ||
-		(event.keyCode === 67 && event.ctrlKey === true) ||
-		(event.keyCode === 86 && event.ctrlKey === true) ||
-		(event.keyCode === 88 && event.ctrlKey === true)) {
+		// Allow: Ctrl+A, Ctrl+C, Ctrl+V, Ctrl+X, Ctrl+Z
+		(event.ctrlKey === true && [65, 67, 86, 88, 90].indexOf(event.keyCode) !== -1) ||
+		// Allow: Cmd+A, Cmd+C, Cmd+V, Cmd+X, Cmd+Z (Mac)
+		(event.metaKey === true && [65, 67, 86, 88, 90].indexOf(event.keyCode) !== -1) ||
+		// Allow: home, end, left, right, down, up
+		(event.keyCode >= 35 && event.keyCode <= 40)) {
 		return;
 	}
 	
@@ -149,25 +158,25 @@ watch(() => props.value, (newValue) => {
 
 <style scoped>
 .has-error {
-	border-color: var(--danger) !important;
+	border-color: rgba(0, 0, 0, 0.3) !important;
 }
 
 .error-icon {
-	color: var(--danger);
+	color: rgba(0, 0, 0, 0.6);
 }
 
 .success-icon {
-	color: var(--success);
+	color: rgba(0, 0, 0, 0.6);
 }
 
 .error-message {
-	color: var(--danger);
+	color: rgba(0, 0, 0, 0.7);
 	font-size: 12px;
 	margin-top: 4px;
 }
 
 .success-message {
-	color: var(--success);
+	color: rgba(0, 0, 0, 0.6);
 	font-size: 12px;
 	margin-top: 4px;
 }

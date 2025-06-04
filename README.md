@@ -1,6 +1,6 @@
 # 🇧🇷 Directus Brazilian Standards
 
-**Complete Brazilian formatting extensions for Directus** - Currency (BRL), Postal Codes (CEP), and Tax IDs (CPF/CNPJ) with interfaces and displays.
+**Complete Brazilian formatting extensions for Directus** - Currency (BRL), Postal Codes (CEP), and Tax IDs (CPF) with interfaces and displays.
 
 [![npm version](https://badge.fury.io/js/directus-brazilian-standards.svg)](https://badge.fury.io/js/directus-brazilian-standards)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -23,17 +23,10 @@
 - **Visual feedback** with success/error indicators
 - **Stores clean numbers** in database
 
-### 👤 **Brazilian CPF (Individual Tax ID)**
+### 👤 **Brazilian CPF (Tax ID)**
 - **Live formatting** (12345678901 → 123.456.789-01)
 - **Full CPF validation** using official algorithm
 - **Prevents invalid patterns** (like 111.111.111-11)
-- **Visual validation feedback**
-- **Privacy masking option** for displays
-
-### 🏢 **Brazilian CNPJ (Business Tax ID)**
-- **Live formatting** (12345678000190 → 12.345.678/0001-90)
-- **Full CNPJ validation** using official algorithm
-- **Prevents invalid patterns** (like 11.111.111/1111-11)
 - **Visual validation feedback**
 - **Privacy masking option** for displays
 
@@ -43,6 +36,8 @@
 ```bash
 npm install directus-brazilian-standards
 ```
+
+> **🐛 v1.4.1 Bug Fix**: Fixed critical currency formatting issue where typing `10000` displayed as `R$ 100,00` instead of `R$ 10.000,00`
 
 ### Via Directus Marketplace
 1. Go to **Settings** → **Extensions** → **Marketplace**
@@ -75,14 +70,6 @@ npm install directus-brazilian-standards
 4. Enable CPF validation as needed
 ```
 
-### CNPJ Fields
-```
-1. Create field → Type: String → Max Length: 14
-2. Interface: Brazilian CNPJ
-3. Display: Brazilian CNPJ  
-4. Enable CNPJ validation as needed
-```
-
 ## 📊 API Response Examples
 
 ### Currency Field
@@ -104,13 +91,6 @@ npm install directus-brazilian-standards
 ```json
 {
   "tax_id": "01958284106"     // Clean numbers for validation
-}
-```
-
-### CNPJ Field
-```json
-{
-  "business_id": "12345678000190"  // Clean numbers for validation
 }
 ```
 
@@ -145,16 +125,6 @@ npm install directus-brazilian-standards
 - **Show Placeholder for Empty**: Show placeholder for empty values
 - **Mask Digits for Privacy**: Show as ***.***.***-** for privacy
 
-### CNPJ Interface
-- **Placeholder**: Custom placeholder text (default: "12.345.678/0001-90")
-- **Required**: Make field required
-- **Validate CNPJ**: Enable full CNPJ validation with algorithm
-- **Disabled**: Disable input
-
-### CNPJ Display
-- **Show Placeholder for Empty**: Show placeholder for empty values
-- **Mask Digits for Privacy**: Show as **.***.***/****-** for privacy
-
 ## 🛠️ Development
 
 This package includes both **interfaces** (for input/editing) and **displays** (for read-only views).
@@ -163,13 +133,11 @@ This package includes both **interfaces** (for input/editing) and **displays** (
 - `brazilian-currency` - Currency input with live formatting
 - `brazilian-cep` - CEP input with validation
 - `brazilian-cpf` - CPF input with validation
-- `brazilian-cnpj` - CNPJ input with validation
 
 ### Displays Included:
 - `brazilian-currency-display` - Currency display with Brazilian formatting
 - `brazilian-cep-display` - CEP display with formatting  
 - `brazilian-cpf-display` - CPF display with formatting and privacy options
-- `brazilian-cnpj-display` - CNPJ display with formatting and privacy options
 
 ## 🌟 Why Use This Extension?
 
@@ -216,13 +184,6 @@ Display shows: 019.582.841-06
 Database stores: "01958284106"
 ```
 
-### CNPJ Input
-```
-User types: 12345678000190
-Display shows: 12.345.678/0001-90
-Database stores: "12345678000190"
-```
-
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
@@ -248,7 +209,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 - Built for the Brazilian Directus community
 - Follows official Brazilian formatting standards
 - Uses proper pt-BR locale formatting
-- Implements official CPF and CNPJ validation algorithms
+- Implements official CPF validation algorithm
 
 ---
 

@@ -42,7 +42,7 @@ const formattedValue = computed(() => {
 
 <style scoped>
 .cep-value {
-	font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+	font-family: var(--family-sans-serif);
 	color: var(--foreground-normal);
 }
 

@@ -7,7 +7,7 @@
 		@update:model-value="updateValue"
 		@blur="onBlur"
 		@keydown="onKeyDown"
-		maxlength="14"
+		maxlength="15"
 	>
 		<template #append v-if="hasError">
 			<v-icon name="error" class="error-icon" />
@@ -22,20 +22,20 @@
 	</div>
 	
 	<div v-else-if="isValid && value" class="success-message">
-		CPF válido
+		Telefone válido
 	</div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { formatCPF, isValidCPF, cleanCPF } from '../../utils/formatters';
+import { formatPhone, isValidPhone, cleanPhone } from '../../utils/formatters';
 
 interface Props {
 	value?: string | null;
 	placeholder?: string;
 	disabled?: boolean;
 	required?: boolean;
-	validateCpf?: boolean;
+	validatePhone?: boolean;
 }
 
 interface Emits {
@@ -44,10 +44,10 @@ interface Emits {
 
 const props = withDefaults(defineProps<Props>(), {
 	value: null,
-	placeholder: '123.456.789-01',
+	placeholder: '(11) 99999-9999',
 	disabled: false,
 	required: false,
-	validateCpf: true,
+	validatePhone: true,
 });
 
 const emit = defineEmits<Emits>();
@@ -58,7 +58,7 @@ const isValid = ref(false);
 
 const displayValue = computed(() => {
 	if (!props.value) return '';
-	return formatCPF(props.value);
+	return formatPhone(props.value);
 });
 
 const validateValue = (value: string): boolean => {
@@ -68,30 +68,29 @@ const validateValue = (value: string): boolean => {
 	
 	if (!value && props.required) {
 		hasError.value = true;
-		errorMessage.value = 'CPF é obrigatório';
+		errorMessage.value = 'Telefone é obrigatório';
 		return false;
 	}
 	
-	if (value && props.validateCpf) {
-		const cleanValue = cleanCPF(value);
+	if (value && props.validatePhone) {
+		const cleanValue = cleanPhone(value);
 		
-		if (cleanValue.length > 0 && cleanValue.length < 11) {
+		if (cleanValue.length > 0 && cleanValue.length < 10) {
 			hasError.value = true;
-			errorMessage.value = 'CPF deve ter 11 dígitos';
+			errorMessage.value = 'Telefone deve ter pelo menos 10 dígitos';
 			return false;
 		}
 		
-		if (cleanValue.length === 11) {
-			// Check for repeated digits (like 11111111111)
-			if (/^(\d)\1{10}$/.test(cleanValue)) {
+		if (cleanValue.length > 11) {
+			hasError.value = true;
+			errorMessage.value = 'Telefone deve ter no máximo 11 dígitos';
+			return false;
+		}
+		
+		if (cleanValue.length >= 10) {
+			if (!isValidPhone(value)) {
 				hasError.value = true;
-				errorMessage.value = 'CPF inválido';
-				return false;
-			}
-			
-			if (!isValidCPF(value)) {
-				hasError.value = true;
-				errorMessage.value = 'CPF inválido';
+				errorMessage.value = 'Formato de telefone inválido';
 				return false;
 			}
 			
@@ -111,22 +110,15 @@ const updateValue = (newValue: string) => {
 		return;
 	}
 	
-	// Format the CPF as user types
-	const formatted = formatCPF(newValue);
-	
-	// Get the clean value for storage
-	const cleanValue = cleanCPF(formatted);
-	
-	// Validate the value
+	const formatted = formatPhone(newValue);
+	const cleanValue = cleanPhone(formatted);
 	validateValue(formatted);
-	
-	// Emit the clean value (numbers only) for storage
 	emit('input', cleanValue || null);
 };
 
 const onBlur = () => {
 	if (props.value) {
-		const formatted = formatCPF(props.value);
+		const formatted = formatPhone(props.value);
 		validateValue(formatted);
 	}
 };
@@ -150,10 +142,9 @@ const onKeyDown = (event: KeyboardEvent) => {
 	}
 };
 
-// Watch for external value changes
 watch(() => props.value, (newValue) => {
 	if (newValue) {
-		const formatted = formatCPF(newValue);
+		const formatted = formatPhone(newValue);
 		validateValue(formatted);
 	} else {
 		hasError.value = false;
@@ -187,4 +178,4 @@ watch(() => props.value, (newValue) => {
 	font-size: 12px;
 	margin-top: 4px;
 }
-</style>
+</style> 

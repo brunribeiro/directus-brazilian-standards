@@ -23,6 +23,16 @@
 import { ref, computed, watch, nextTick } from 'vue';
 import { formatBRLCurrencyInput, parseBRLCurrency } from '../../utils/formatters';
 
+// Helper function for consistent currency formatting
+const formatCurrency = (value: number): string => {
+	return new Intl.NumberFormat('pt-BR', {
+		style: 'currency',
+		currency: 'BRL',
+		minimumFractionDigits: 2,
+		maximumFractionDigits: 2
+	}).format(value);
+};
+
 interface Props {
 	value?: number | null;
 	placeholder?: string;
@@ -56,7 +66,9 @@ const displayValue = computed(() => {
 	}
 	
 	if (props.value !== null && props.value !== undefined) {
-		return formatBRLCurrencyInput(props.value.toString().replace('.', ''));
+		// When displaying a stored numeric value, format it directly as currency
+		// Don't use formatBRLCurrencyInput as it's designed for user input (treats as cents)
+		return formatCurrency(props.value);
 	}
 	
 	return '';
@@ -68,13 +80,13 @@ const validateValue = (value: number): boolean => {
 	
 	if (props.minValue !== undefined && value < props.minValue) {
 		hasError.value = true;
-		errorMessage.value = `Valor mínimo: ${formatBRLCurrencyInput(props.minValue.toString().replace('.', ''))}`;
+		errorMessage.value = `Valor mínimo: ${formatCurrency(props.minValue)}`;
 		return false;
 	}
 	
 	if (props.maxValue !== undefined && value > props.maxValue) {
 		hasError.value = true;
-		errorMessage.value = `Valor máximo: ${formatBRLCurrencyInput(props.maxValue.toString().replace('.', ''))}`;
+		errorMessage.value = `Valor máximo: ${formatCurrency(props.maxValue)}`;
 		return false;
 	}
 	
@@ -107,7 +119,8 @@ const updateValue = (newValue: string) => {
 const onFocus = () => {
 	isFocused.value = true;
 	if (props.value !== null && props.value !== undefined) {
-		internalValue.value = formatBRLCurrencyInput(props.value.toString().replace('.', ''));
+		// When focusing, show the formatted currency value for editing
+		internalValue.value = formatCurrency(props.value);
 	} else {
 		internalValue.value = '';
 	}
@@ -154,15 +167,15 @@ watch(() => props.value, (newValue) => {
 
 <style scoped>
 .has-error {
-	border-color: var(--danger) !important;
+	border-color: rgba(0, 0, 0, 0.3) !important;
 }
 
 .error-icon {
-	color: var(--danger);
+	color: rgba(0, 0, 0, 0.6);
 }
 
 .error-message {
-	color: var(--danger);
+	color: rgba(0, 0, 0, 0.7);
 	font-size: 12px;
 	margin-top: 4px;
 }

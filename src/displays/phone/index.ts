@@ -2,10 +2,10 @@ import { defineDisplay } from '@directus/extensions-sdk';
 import DisplayComponent from './display.vue';
 
 export default defineDisplay({
-	id: 'brazilian-cnpj-display',
-	name: 'Brazilian CNPJ',
-	description: 'Display tax IDs in Brazilian format (XX.XXX.XXX/XXXX-XX)',
-	icon: 'business',
+	id: 'brazilian-phone-display',
+	name: 'Brazilian Phone',
+	description: 'Display phone numbers in Brazilian format ((11) 99999-9999)',
+	icon: 'phone',
 	component: DisplayComponent,
 	types: ['string'],
 	group: 'standard',
@@ -29,7 +29,7 @@ export default defineDisplay({
 			meta: {
 				width: 'half',
 				interface: 'boolean',
-				note: 'Show as **_.___.___/****-** for privacy',
+				note: 'Show as (XX) XXXXX-XXXX for privacy',
 			},
 			schema: {
 				default_value: false,

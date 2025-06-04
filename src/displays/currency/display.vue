@@ -41,6 +41,7 @@ const formattedValue = computed(() => {
 
 <style scoped>
 .currency-value {
+	font-family: var(--theme--fonts--monospace--font-family);
 	font-weight: 500;
 	color: var(--foreground-normal);
 }

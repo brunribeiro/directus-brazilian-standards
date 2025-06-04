@@ -2,10 +2,10 @@ import { defineInterface } from '@directus/extensions-sdk';
 import InterfaceComponent from './interface.vue';
 
 export default defineInterface({
-	id: 'brazilian-cnpj',
-	name: 'Brazilian CNPJ',
-	description: 'Brazilian tax ID (CNPJ) input with automatic formatting and validation (XX.XXX.XXX/XXXX-XX)',
-	icon: 'business',
+	id: 'brazilian-phone',
+	name: 'Brazilian Phone',
+	description: 'Brazilian phone number input with automatic formatting and validation ((11) 99999-9999)',
+	icon: 'phone',
 	component: InterfaceComponent,
 	types: ['string'],
 	group: 'standard',
@@ -19,7 +19,7 @@ export default defineInterface({
 				interface: 'input',
 			},
 			schema: {
-				default_value: 'XX.XXX.XXX/XXXX-XX',
+				default_value: '(11) 99999-9999',
 			},
 		},
 		{
@@ -47,13 +47,13 @@ export default defineInterface({
 			},
 		},
 		{
-			field: 'validate_cnpj',
-			name: 'Validate CNPJ',
+			field: 'validate_phone',
+			name: 'Validate Phone Format',
 			type: 'boolean',
 			meta: {
 				width: 'half',
 				interface: 'boolean',
-				note: 'Enable to validate CNPJ using the official algorithm',
+				note: 'Enable to validate Brazilian phone number format',
 			},
 			schema: {
 				default_value: true,
