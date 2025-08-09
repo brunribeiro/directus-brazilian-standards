@@ -1,6 +1,6 @@
 {
 	"name": "directus-brazilian-standards",
-	"version": "1.4.1",
+	"version": "1.5.0",
 	"description": "Complete Brazilian formatting extensions for Directus - Currency (BRL), Postal Codes (CEP), Tax IDs (CPF/CNPJ), and Phone Numbers with interfaces and displays",
 	"keywords": [
 		"directus",
@@ -26,11 +26,14 @@
 		"locale",
 		"pt-br",
 		"interface",
-		"display"
+		"display",
+		"api-lookup",
+		"auto-fill",
+		"company-data"
 	],
 	"author": {
 		"name": "Bruno Ribeiro",
-		"email": "bruno@directus-renovando.com",
+		"email": "bruno@renovando-directus.com",
 		"url": "https://github.com/brunribeiro"
 	},
 	"license": "MIT",
@@ -121,5 +124,8 @@
 	},
 	"engines": {
 		"node": ">=18.0.0"
+	},
+	"publishConfig": {
+		"access": "public"
 	}
 }

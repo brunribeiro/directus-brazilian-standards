@@ -4,7 +4,7 @@ import InterfaceComponent from './interface.vue';
 export default defineInterface({
 	id: 'brazilian-cep',
 	name: 'Brazilian CEP',
-	description: 'Brazilian postal code (CEP) input with automatic formatting (12.345-678)',
+	description: 'With formatting, optional API lookup and field mapping',
 	icon: 'location_on',
 	component: InterfaceComponent,
 	types: ['string'],
@@ -53,11 +53,45 @@ export default defineInterface({
 			meta: {
 				width: 'half',
 				interface: 'boolean',
-				note: 'Enable to validate CEP format (8 digits)',
+				note: 'Válido formato do CEP (8 dígitos)',
 			},
 			schema: {
 				default_value: true,
 			},
 		},
+		{
+			field: 'enable_api_lookup',
+			name: 'Enable API Lookup',
+			type: 'boolean',
+			meta: {
+				width: 'half',
+				interface: 'boolean',
+				note: 'Busca automática de endereço via ViaCEP',
+			},
+			schema: {
+				default_value: false,
+			},
+		},
+		{
+			field: 'auto_fill_mapping',
+			name: 'Auto-fill Field Mapping',
+			type: 'json',
+			meta: {
+				width: 'full',
+				interface: 'input-code',
+				options: {
+					language: 'json',
+					template: JSON.stringify({
+						"address": "logradouro + ', ' + complemento + ' ' + bairro",
+						"city": "localidade",
+						"state": "uf",
+						"neighborhood": "bairro",
+						"street": "logradouro",
+						"complement": "complemento"
+					}, null, 2),
+				},
+				note: 'Mapeamento de campos: {"campo_formulario": "campo_api"}',
+			},
+		}
 	],
 });

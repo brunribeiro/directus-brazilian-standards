@@ -4,7 +4,7 @@ import InterfaceComponent from './interface.vue';
 export default defineInterface({
 	id: 'brazilian-cpf',
 	name: 'Brazilian CPF',
-	description: 'Brazilian tax ID (CPF) input with automatic formatting and validation (123.456.789-01)',
+	description: 'With formatting and validation',
 	icon: 'person',
 	component: InterfaceComponent,
 	types: ['string'],
@@ -48,12 +48,12 @@ export default defineInterface({
 		},
 		{
 			field: 'validate_cpf',
-			name: 'Validate CPF',
+			name: 'Validate CPF Format',
 			type: 'boolean',
 			meta: {
 				width: 'half',
 				interface: 'boolean',
-				note: 'Enable to validate CPF using the official algorithm',
+				note: 'Válido formato do CPF (11 dígitos)',
 			},
 			schema: {
 				default_value: true,

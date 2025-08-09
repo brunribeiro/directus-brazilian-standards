@@ -3,8 +3,8 @@ import InterfaceComponent from './interface.vue';
 
 export default defineInterface({
 	id: 'brazilian-currency',
-	name: 'Brazilian Currency (BRL)',
-	description: 'Brazilian Real currency input with live formatting and mask',
+	name: 'Brazilian Currency',
+	description: 'With formatting (R$ 1.234,56)',
 	icon: 'attach_money',
 	component: InterfaceComponent,
 	types: ['decimal', 'float', 'integer'],

@@ -41,27 +41,27 @@ export function parseBRLCurrency(formattedValue: string): number {
 }
 
 // CEP Formatter
-export function formatCEP(value: string): string {
-  if (!value) return '';
-  const cleanValue = value.replace(/\D/g, '');
-  
-  if (cleanValue.length === 0) return '';
-  if (cleanValue.length <= 2) return cleanValue;
-  if (cleanValue.length <= 5) return cleanValue.replace(/(\d{2})(\d{1,3})/, '$1.$2');
-  
-  return cleanValue.slice(0, 8).replace(/(\d{2})(\d{3})(\d{1,3})/, '$1.$2-$3');
-}
+export const cleanCEP = (value: string | null | undefined): string => {
+	if (!value) return '';
+	return String(value).replace(/\D/g, '');
+};
 
-export function isValidCEP(cep: string): boolean {
-  if (!cep) return false;
-  const cleanCEP = cep.replace(/\D/g, '');
-  return cleanCEP.length === 8 && /^\d{8}$/.test(cleanCEP);
-}
+export const formatCEP = (value: string | null | undefined): string => {
+	if (!value) return '';
+	const cleanValue = cleanCEP(value);
+	
+	if (cleanValue.length <= 5) {
+		return cleanValue;
+	}
+	
+	return cleanValue.replace(/(\d{5})(\d{1,3})/, '$1-$2');
+};
 
-export function cleanCEP(cep: string): string {
-  if (!cep) return '';
-  return cep.replace(/\D/g, '');
-}
+export const validateCEP = (value: string | null | undefined): boolean => {
+	if (!value) return false;
+	const cleanValue = cleanCEP(value);
+	return cleanValue.length === 8 && /^\d{8}$/.test(cleanValue);
+};
 
 // CPF Formatter
 export function formatCPF(value: string): string {
@@ -248,4 +248,298 @@ export function isValidPhone(phone: string): boolean {
 export function cleanPhone(phone: string): string {
   if (!phone) return '';
   return phone.replace(/\D/g, '');
+}
+
+// CNPJ API Lookup functionality
+export interface CNPJApiResponse {
+	cnpj_raiz: string;
+	razao_social: string;
+	capital_social: string;
+	responsavel_federativo: string;
+	atualizado_em: string;
+	porte: {
+		id: string;
+		descricao: string;
+	};
+	natureza_juridica: {
+		id: string;
+		descricao: string;
+	};
+	qualificacao_do_responsavel: {
+		id: number;
+		descricao: string;
+	};
+	socios: Array<{
+		cpf_cnpj_socio: string;
+		nome: string;
+		tipo: string;
+		data_entrada: string;
+		faixa_etaria: string;
+		qualificacao_socio: {
+			id: number;
+			descricao: string;
+		};
+	}>;
+	estabelecimento: {
+		cnpj: string;
+		cnpj_raiz: string;
+		cnpj_ordem: string;
+		cnpj_digito_verificador: string;
+		tipo: string;
+		nome_fantasia: string;
+		situacao_cadastral: string;
+		data_situacao_cadastral: string;
+		data_inicio_atividade: string;
+		tipo_logradouro: string;
+		logradouro: string;
+		numero: string;
+		complemento?: string;
+		bairro: string;
+		cep: string;
+		ddd1: string;
+		telefone1: string;
+		ddd2?: string;
+		telefone2?: string;
+		email: string;
+		atividade_principal: {
+			id: string;
+			secao: string;
+			divisao: string;
+			grupo: string;
+			classe: string;
+			subclasse: string;
+			descricao: string;
+		};
+		estado: {
+			id: number;
+			nome: string;
+			sigla: string;
+			ibge_id: number;
+		};
+		cidade: {
+			id: number;
+			nome: string;
+			ibge_id: number;
+			siafi_id: string;
+		};
+	};
+}
+
+/**
+ * Lookup company data from CNPJ.ws API
+ */
+export async function lookupCNPJ(cnpj: string, token?: string): Promise<CNPJApiResponse | null> {
+	try {
+		const cleanCnpj = cleanCNPJ(cnpj);
+		if (!cleanCnpj || cleanCnpj.length !== 14) {
+			throw new Error('Invalid CNPJ format');
+		}
+
+		// Correct API endpoint
+		const baseUrl = 'https://publica.cnpj.ws/cnpj';
+		
+		const headers: Record<string, string> = {
+			'Accept': 'application/json',
+		};
+
+		// Note: The public API doesn't use tokens, but keeping for future commercial API support
+		if (token) {
+			headers['Authorization'] = `Bearer ${token}`;
+		}
+
+		const response = await fetch(`${baseUrl}/${cleanCnpj}`, {
+			method: 'GET',
+			headers,
+		});
+
+		if (!response.ok) {
+			if (response.status === 429) {
+				throw new Error('Rate limit exceeded. Please try again later.');
+			}
+			if (response.status === 404) {
+				throw new Error('CNPJ not found');
+			}
+			throw new Error(`API Error: ${response.status}`);
+		}
+
+		const data = await response.json();
+		return data;
+	} catch (error) {
+		console.error('CNPJ API lookup error:', error);
+		throw error;
+	}
+}
+
+/**
+ * Get nested value from object using dot notation
+ */
+export function getNestedValue(obj: any, path: string): any {
+	return path.split('.').reduce((current, key) => current?.[key], obj);
+}
+
+/**
+ * Apply field mapping from API response to form fields
+ */
+export function applyFieldMapping(
+	apiResponse: CNPJApiResponse | CEPApiResponse, 
+	mapping: Record<string, string>
+): Record<string, any> {
+	const result: Record<string, any> = {};
+	
+	for (const [formField, apiExpression] of Object.entries(mapping)) {
+		try {
+			let value: any;
+			
+			// Check if it's a concatenation expression (contains +)
+			if (apiExpression.includes('+')) {
+				value = evaluateConcatenationExpression(apiResponse, apiExpression);
+			} else {
+				// Simple field mapping
+				value = getNestedValue(apiResponse, apiExpression);
+			}
+			
+			// Apply automatic text formatting for string values
+			if (typeof value === 'string' && value.trim()) {
+				value = formatTextValue(value);
+			}
+			
+			if (value !== undefined && value !== null && value !== '') {
+				result[formField] = value;
+				console.log(`✅ Mapped field: ${formField} = ${value}`);
+			} else {
+				console.log(`⚠️ Empty/null value for field: ${formField} (from ${apiExpression})`);
+			}
+		} catch (error) {
+			console.error(`❌ Error mapping field ${formField}:`, error);
+		}
+	}
+	
+	return result;
+}
+
+/**
+ * Evaluate concatenation expressions like "field1 + ' ' + field2 + ', ' + field3"
+ */
+export function evaluateConcatenationExpression(apiResponse: CNPJApiResponse | CEPApiResponse, expression: string): string {
+	// Split by + and process each part
+	const parts = expression.split('+').map(part => part.trim());
+	
+	return parts
+		.map(part => {
+			// Remove quotes if present
+			const cleanPart = part.replace(/^['\"]|['\"]$/g, '');
+			
+			// If it's a literal string (was quoted), return as-is
+			if (part.startsWith('"') || part.startsWith("'")) {
+				return cleanPart;
+			}
+			
+			// Otherwise, treat as API field path
+			const value = getNestedValue(apiResponse, cleanPart);
+			
+			// Apply automatic text formatting for string values
+			if (typeof value === 'string' && value.trim()) {
+				return formatTextValue(value);
+			}
+			
+			return value || '';
+		})
+		.filter(part => part !== '') // Remove empty parts
+		.join(''); // Join without separator
+}
+
+// Text Formatting Utilities
+export function toTitleCase(str: string): string {
+  if (!str) return '';
+  
+  // Words that should remain lowercase (Portuguese articles, prepositions, conjunctions)
+  const lowercaseWords = [
+    'a', 'as', 'o', 'os', 'e', 'de', 'da', 'das', 'do', 'dos', 'em', 'na', 'nas', 'no', 'nos',
+    'para', 'por', 'com', 'sem', 'sob', 'sobre', 'entre', 'até', 'desde', 'durante', 'contra'
+  ];
+  
+  return str.toLowerCase()
+    .split(' ')
+    .map((word, index) => {
+      // Always capitalize the first word
+      if (index === 0) {
+        return word.charAt(0).toUpperCase() + word.slice(1);
+      }
+      
+      // Check if word should remain lowercase
+      if (lowercaseWords.includes(word.toLowerCase())) {
+        return word.toLowerCase();
+      }
+      
+      // Capitalize other words
+      return word.charAt(0).toUpperCase() + word.slice(1);
+    })
+    .join(' ');
+}
+
+export function formatTextValue(value: any): string {
+  if (!value) return '';
+  
+  const strValue = String(value).trim();
+  
+  // Check if the text is ALL CAPS (more than 50% uppercase letters)
+  const uppercaseCount = (strValue.match(/[A-ZÁÀÂÃÉÈÊÍÌÎÓÒÔÕÚÙÛÇ]/g) || []).length;
+  const totalLetters = (strValue.match(/[A-Za-záàâãéèêíìîóòôõúùûç]/g) || []).length;
+  
+  if (totalLetters > 0 && uppercaseCount / totalLetters > 0.7) {
+    // Text is mostly uppercase, convert to title case
+    return toTitleCase(strValue);
+  }
+  
+  // Return as-is if not ALL CAPS
+  return strValue;
+}
+
+// CEP API Types and Functions
+export interface CEPApiResponse {
+	cep: string;
+	logradouro: string;
+	complemento: string;
+	bairro: string;
+	localidade: string;
+	uf: string;
+	ibge: string;
+	gia: string;
+	ddd: string;
+	siafi: string;
+	erro?: boolean;
+}
+
+/**
+ * Lookup CEP data using ViaCEP API
+ */
+export async function lookupCEP(cep: string): Promise<CEPApiResponse | null> {
+	try {
+		const cleanCepValue = cleanCEP(cep);
+		
+		if (!cleanCepValue || cleanCepValue.length !== 8) {
+			throw new Error('CEP deve ter 8 dígitos');
+		}
+		
+		console.log('🔍 Looking up CEP:', cleanCepValue);
+		
+		const response = await fetch(`https://viacep.com.br/ws/${cleanCepValue}/json/`);
+		
+		if (!response.ok) {
+			throw new Error(`API Error: ${response.status}`);
+		}
+		
+		const data: CEPApiResponse = await response.json();
+		
+		if (data.erro) {
+			throw new Error('CEP não encontrado');
+		}
+		
+		console.log('✅ CEP data received:', data);
+		return data;
+		
+	} catch (error) {
+		console.error('❌ CEP lookup error:', error);
+		throw error;
+	}
 } 

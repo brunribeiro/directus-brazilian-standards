@@ -1,6 +1,6 @@
 # 🇧🇷 Directus Brazilian Standards
 
-**Complete Brazilian formatting extensions for Directus** - Currency (BRL), Postal Codes (CEP), Tax IDs (CPF/CNPJ), and Phone Numbers with interfaces and displays.
+**Complete Brazilian formatting extensions for Directus** - Currency (BRL), Postal Codes (CEP), and Tax IDs (CPF) with interfaces and displays.
 
 [![npm version](https://badge.fury.io/js/directus-brazilian-standards.svg)](https://badge.fury.io/js/directus-brazilian-standards)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -30,21 +30,81 @@
 - **Visual validation feedback**
 - **Privacy masking option** for displays
 
-### 🧾 **Brazilian CNPJ (Business Tax ID)**
-- **Live formatting** (12345678000190 → 12.345.678/0001-90)
-- **Full CNPJ validation** using official algorithm
-- **Prevents invalid patterns** (like 11.111.111/1111-11)
-- **Visual validation feedback**
-- **Stores clean numbers** in database
+### 🆔 **CNPJ (Brazilian Company Tax ID)**
+- **Interface**: `brazilian-cnpj`
+- **Display**: `brazilian-cnpj`
+- **Features**:
+  - Automatic formatting (XX.XXX.XXX/XXXX-XX)
+  - Real-time validation using official algorithm
+  - **🆕 Smart paste**: Automatically cleans formatted CNPJs when pasted
+  - **🆕 API Lookup**: Automatic company data lookup via CNPJ.ws API
+  - **🆕 Auto-fill mapping**: Automatically populate other form fields
+  - **🆕 Manual search trigger**: Search button for user-controlled API calls
 
-### 📱 **Brazilian Phone**
-- **Automatic formatting** for 10/11 digits
-  - 10-digit landline: (11) 3265-4321
-  - 11-digit mobile: (11) 98765-4321
-- **Validation** of Brazilian area codes (DDD)
-- **Rules**: 10 or 11 digits; 11-digit mobiles start with 9
-- **Visual validation feedback**
-- **Stores clean numbers** in database
+#### **CNPJ API Lookup Configuration**
+
+The CNPJ interface now supports automatic company data lookup using the [publica.cnpj.ws API](https://publica.cnpj.ws):
+
+1. **Enable API Lookup**: Toggle to enable CNPJ.ws API integration
+2. **API Token** (Optional): For future commercial features (not required for public API)
+3. **Auto-fill Field Mapping**: JSON mapping of API fields to form fields
+4. **Search Button**: Manual trigger for API lookup (appears when API lookup is enabled)
+
+**How it works**:
+- User types CNPJ with automatic formatting and validation
+- **Smart paste**: Copy formatted CNPJs (e.g., "33.000.167/0001-01") and paste directly - formatting is automatically cleaned and reapplied
+- When API lookup is enabled, a search button (🔍) appears next to the input
+- User clicks the search button to trigger company data lookup
+- Mapped fields are automatically populated with company information
+
+**Example mapping**:
+```json
+{
+  "company_name": "razao_social",
+  "trade_name": "estabelecimento.nome_fantasia", 
+  "complete_address": "estabelecimento.tipo_logradouro + ' ' + estabelecimento.logradouro + ', ' + estabelecimento.numero + ' - ' + estabelecimento.complemento",
+  "city": "estabelecimento.cidade.nome",
+  "state": "estabelecimento.estado.sigla",
+  "phone": "estabelecimento.telefone1",
+  "email": "estabelecimento.email"
+}
+```
+
+**Mapping Format**:
+- **Simple mapping**: `"form_field": "api_field"`
+- **Concatenation**: `"form_field": "api_field1 + ' separator ' + api_field2"`
+- **String literals**: Use single or double quotes for static text
+- **Multiple fields**: Combine any number of API fields with separators
+
+**Concatenation Examples**:
+```json
+{
+  "full_address": "estabelecimento.tipo_logradouro + ' ' + estabelecimento.logradouro + ', ' + estabelecimento.numero",
+  "contact_info": "estabelecimento.telefone1 + ' - ' + estabelecimento.email",
+  "company_info": "razao_social + ' (' + estabelecimento.nome_fantasia + ')'"
+}
+```
+
+**Available API fields**:
+- `razao_social` - Company legal name
+- `capital_social` - Share capital
+- `natureza_juridica.descricao` - Legal nature description
+- `porte.descricao` - Company size description
+- `estabelecimento.nome_fantasia` - Trade name
+- `estabelecimento.email` - Email address
+- `estabelecimento.telefone1` - Primary phone
+- `estabelecimento.telefone2` - Secondary phone
+- `estabelecimento.logradouro` - Street address
+- `estabelecimento.numero` - Street number
+- `estabelecimento.complemento` - Address complement
+- `estabelecimento.bairro` - Neighborhood
+- `estabelecimento.cidade.nome` - City name
+- `estabelecimento.estado.nome` - State name
+- `estabelecimento.estado.sigla` - State abbreviation
+- `estabelecimento.cep` - ZIP code
+- `estabelecimento.situacao_cadastral` - Registration status
+- `estabelecimento.data_inicio_atividade` - Activity start date
+- `estabelecimento.atividade_principal.descricao` - Main activity description
 
 ## 📦 Installation
 
@@ -86,21 +146,16 @@ npm install directus-brazilian-standards
 4. Enable CPF validation as needed
 ```
 
-### CNPJ Fields
-```
-1. Create field → Type: String → Max Length: 14
-2. Interface: Brazilian CNPJ
-3. Display: Brazilian CNPJ
-4. Enable CNPJ validation as needed
-```
+### CNPJ with API Lookup
 
-### Phone Fields
-```
-1. Create field → Type: String → Max Length: 11
-2. Interface: Brazilian Phone
-3. Display: Brazilian Phone
-4. Enable Phone format validation as needed
-```
+1. Configure the field with `Brazilian CNPJ` interface
+2. Enable "Enable API Lookup" option
+3. (Optional) Add CNPJ.ws API token for commercial features
+4. Configure "Auto-fill Field Mapping" with your desired field mappings
+5. When users type a valid CNPJ, the extension will:
+   - Validate the CNPJ format
+   - Query CNPJ.ws API for company data
+   - Automatically fill mapped fields with company information
 
 ## 📊 API Response Examples
 
@@ -123,20 +178,6 @@ npm install directus-brazilian-standards
 ```json
 {
   "tax_id": "01958284106"     // Clean numbers for validation
-}
-```
-
-### CNPJ Field
-```json
-{
-  "business_id": "11222333000181"   // Clean numbers for integrations
-}
-```
-
-### Phone Field
-```json
-{
-  "phone": "11987654321"           // Clean numbers for validation
 }
 ```
 
@@ -171,26 +212,6 @@ npm install directus-brazilian-standards
 - **Show Placeholder for Empty**: Show placeholder for empty values
 - **Mask Digits for Privacy**: Show as ***.***.***-** for privacy
 
-### CNPJ Interface
-- **Placeholder**: Custom placeholder text (default: "XX.XXX.XXX/XXXX-XX")
-- **Required**: Make field required
-- **Validate CNPJ**: Enable full CNPJ validation with algorithm
-- **Disabled**: Disable input
-
-### CNPJ Display
-- **Show Placeholder for Empty**: Show placeholder for empty values
-- **Mask Digits for Privacy**: Show as **_.___.___/****-** for privacy
-
-### Phone Interface
-- **Placeholder**: Custom placeholder text (default: "(11) 99999-9999")
-- **Required**: Make field required
-- **Validate Phone Format**: Validate Brazilian phone format and DDD
-- **Disabled**: Disable input
-
-### Phone Display
-- **Show Placeholder for Empty**: Show placeholder for empty values
-- **Mask Digits for Privacy**: Show as (XX) XXXXX-XXXX for privacy
-
 ## 🛠️ Development
 
 This package includes both **interfaces** (for input/editing) and **displays** (for read-only views).
@@ -199,15 +220,13 @@ This package includes both **interfaces** (for input/editing) and **displays** (
 - `brazilian-currency` - Currency input with live formatting
 - `brazilian-cep` - CEP input with validation
 - `brazilian-cpf` - CPF input with validation
-- `brazilian-cnpj` - CNPJ input with validation
-- `brazilian-phone` - Phone input with formatting and validation
+- `brazilian-cnpj` - CNPJ input with validation and API lookup
 
 ### Displays Included:
 - `brazilian-currency-display` - Currency display with Brazilian formatting
 - `brazilian-cep-display` - CEP display with formatting  
 - `brazilian-cpf-display` - CPF display with formatting and privacy options
-- `brazilian-cnpj-display` - CNPJ display with formatting and privacy options
-- `brazilian-phone-display` - Phone display with formatting and privacy options
+- `brazilian-cnpj-display` - CNPJ display with formatting and API lookup
 
 ## 🌟 Why Use This Extension?
 
@@ -228,7 +247,7 @@ Thoroughly tested, used in production systems
 
 ## 🔧 Requirements
 
-- **Directus**: ^10.0.0
+- **Directus**: ^10.10.0
 - **Node.js**: >=18.0.0
 
 ## 📝 Examples in Action
@@ -256,16 +275,9 @@ Database stores: "01958284106"
 
 ### CNPJ Input
 ```
-User types: 11222333000181
-Display shows: 11.222.333/0001-81
-Database stores: "11222333000181"
-```
-
-### Phone Input
-```
-User types: 11987654321
-Display shows: (11) 98765-4321
-Database stores: "11987654321"
+User types: 33.000.167/0001-01
+Display shows: 33.000.167/0001-01
+Database stores: "33.000.167/0001-01"
 ```
 
 ## 🤝 Contributing
@@ -286,6 +298,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Bruno Ribeiro**
 - GitHub: [@brunribeiro](https://github.com/brunribeiro)
+- Project: [Directus Renovando](https://github.com/brunribeiro/renovando-directus)
 
 ## 🙏 Acknowledgments
 
@@ -297,3 +310,144 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ---
 
 **Made with ❤️ for the Brazilian developer community** 🇧🇷 
+
+## 🎯 Funcionalidades
+
+### 📮 CEP (Código de Endereçamento Postal)
+- **Interface:** Campo de entrada com formatação automática (XXXXX-XXX)
+- **Display:** Visualização formatada do CEP
+- **Validação:** Estrutura e dígitos válidos
+- **API Lookup:** Busca automática de endereço via ViaCEP
+- **Preenchimento automático:** Campos de endereço baseados na API
+- **Title Case:** Conversão automática de texto em MAIÚSCULAS
+
+### 📱 Configuração do CEP
+
+#### Mapeamento de Campos
+```json
+{
+  "logradouro": "logradouro",
+  "bairro": "bairro", 
+  "cidade": "localidade",
+  "estado": "uf"
+}
+```
+
+#### Concatenação de Campos
+```json
+{
+  "address": "logradouro + ', ' + bairro",
+  "estado": "uf",
+  "cidade": "localidade"
+}
+```
+
+### 🏢 CNPJ (Cadastro Nacional da Pessoa Jurídica)
+- **Interface:** Campo de entrada com formatação (XX.XXX.XXX/XXXX-XX)
+- **Display:** Visualização formatada do CNPJ
+- **Validação:** Algoritmo oficial de validação de CNPJ
+- **API Lookup:** Busca dados da empresa via CNPJ.ws
+- **Preenchimento automático:** Razão social, endereço, telefone, etc.
+
+### 👤 CPF (Cadastro de Pessoas Físicas)
+- **Interface:** Campo de entrada com formatação (XXX.XXX.XXX-XX)
+- **Display:** Visualização formatada do CPF
+- **Validação:** Algoritmo oficial de validação de CPF
+
+### 📞 Telefone
+- **Interface:** Campo de entrada com formatação brasileira ((XX) XXXXX-XXXX)
+- **Display:** Visualização formatada do telefone
+- **Validação:** Códigos de área e números válidos
+
+### 💰 Moeda Brasileira (Real)
+- **Interface:** Campo de entrada com formatação monetária (R$ 0,00)
+- **Display:** Visualização formatada em reais
+
+## 🛠️ Instalação
+
+1. **Baixe a extensão compilada** ou compile do código fonte
+2. **Coloque no diretório extensions** do seu Directus
+3. **Reinicie o Directus** para carregar as extensões
+
+## 🔧 Compilação
+
+```bash
+npm install
+npm run build
+```
+
+## 📋 Requisitos
+
+- Directus 10+
+- Node.js 16+
+- TypeScript (para desenvolvimento)
+
+## 🎨 Interface de Configuração
+
+Todas as interfaces possuem configurações simples e intuitivas:
+
+- **Habilitação de validação**
+- **Configuração de API lookup** 
+- **Mapeamento de campos**
+- **Placeholder personalizado**
+
+## 🔍 Debug e Troubleshooting
+
+### CEP com Campos Relacionais
+O sistema inclui logs detalhados no console do navegador:
+
+```
+🔗 Processing relational field: state
+🔍 Looking up states where uf = "SP"  
+✅ Found states ID: 25
+✅ Mapped field: state = 25 (relational)
+```
+
+### Problemas Comuns
+
+**Erro de Autenticação:**
+- Verifique se o usuário tem permissão de leitura nas collections relacionais
+- Token de autenticação deve estar válido
+
+**Campo não encontrado:**
+- Confirme se o nome da collection está correto
+- Verifique se o campo de busca existe na collection
+- Teste com um filtro manual no Directus
+
+## 📚 Documentação das APIs
+
+### ViaCEP (CEP)
+- **URL:** https://viacep.com.br/
+- **Formato:** `https://viacep.com.br/ws/{cep}/json/`
+- **Campos retornados:** cep, logradouro, bairro, localidade, uf, etc.
+
+### CNPJ.ws (CNPJ) 
+- **URL:** https://cnpj.ws/
+- **Formato:** `https://cnpj.ws/{cnpj}`
+- **Campos retornados:** razão social, endereço, atividade, etc.
+
+## 📄 Licença
+
+MIT License - veja LICENSE para detalhes.
+
+## 🤝 Contribuições
+
+Contribuições são bem-vindas! Por favor:
+
+1. Fork o projeto
+2. Crie uma branch para sua feature
+3. Commit suas mudanças  
+4. Push para a branch
+5. Abra um Pull Request
+
+## 🐛 Reportar Bugs
+
+Use as Issues do GitHub para reportar bugs, incluindo:
+- Versão do Directus
+- Versão da extensão
+- Passos para reproduzir
+- Logs do console (se aplicável)
+
+---
+
+**Desenvolvido com ❤️ para a comunidade brasileira do Directus** 

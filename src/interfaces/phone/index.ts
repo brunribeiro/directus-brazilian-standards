@@ -4,7 +4,7 @@ import InterfaceComponent from './interface.vue';
 export default defineInterface({
 	id: 'brazilian-phone',
 	name: 'Brazilian Phone',
-	description: 'Brazilian phone number input with automatic formatting and validation ((11) 99999-9999)',
+	description: 'With formatting and validation',
 	icon: 'phone',
 	component: InterfaceComponent,
 	types: ['string'],
@@ -53,7 +53,7 @@ export default defineInterface({
 			meta: {
 				width: 'half',
 				interface: 'boolean',
-				note: 'Enable to validate Brazilian phone number format',
+				note: 'Válido formato brasileiro',
 			},
 			schema: {
 				default_value: true,

@@ -1,14 +1,17 @@
 <template>
 	<v-input
 		:model-value="displayValue"
-		:placeholder="placeholder"
-		:disabled="disabled"
+		:placeholder="props.placeholder"
+		:disabled="props.disabled"
 		:class="{ 'has-error': hasError }"
 		@update:model-value="updateValue"
 		@focus="onFocus"
 		@blur="onBlur"
 		@keydown="onKeyDown"
 	>
+		<template #prepend>
+			<span class="currency-symbol">R$</span>
+		</template>
 		<template #append v-if="hasError">
 			<v-icon name="error" class="error-icon" />
 		</template>
@@ -167,15 +170,24 @@ watch(() => props.value, (newValue) => {
 
 <style scoped>
 .has-error {
-	border-color: rgba(0, 0, 0, 0.3) !important;
+	border-color: var(--danger) !important;
+}
+
+.currency-symbol {
+	font-weight: 500;
+	color: var(--foreground-subdued);
 }
 
 .error-icon {
-	color: rgba(0, 0, 0, 0.6);
+	color: var(--danger);
 }
 
-.error-message {
-	color: rgba(0, 0, 0, 0.7);
+.success-icon {
+	color: var(--success);
+}
+
+.error-message,
+.success-message {
 	font-size: 12px;
 	margin-top: 4px;
 }

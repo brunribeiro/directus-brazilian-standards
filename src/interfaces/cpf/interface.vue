@@ -1,8 +1,8 @@
 <template>
 	<v-input
 		:model-value="displayValue"
-		:placeholder="placeholder"
-		:disabled="disabled"
+		:placeholder="props.placeholder"
+		:disabled="props.disabled"
 		:class="{ 'has-error': hasError }"
 		@update:model-value="updateValue"
 		@blur="onBlur"
@@ -17,7 +17,8 @@
 		</template>
 	</v-input>
 	
-	<div v-if="hasError" class="error-message">
+	<div v-if="hasError && errorMessage" class="error-message">
+		<v-icon name="error" />
 		{{ errorMessage }}
 	</div>
 	
@@ -165,25 +166,19 @@ watch(() => props.value, (newValue) => {
 
 <style scoped>
 .has-error {
-	border-color: rgba(0, 0, 0, 0.3) !important;
+	border-color: var(--danger) !important;
 }
 
 .error-icon {
-	color: rgba(0, 0, 0, 0.6);
+	color: var(--danger);
 }
 
 .success-icon {
-	color: rgba(0, 0, 0, 0.6);
+	color: var(--success);
 }
 
-.error-message {
-	color: rgba(0, 0, 0, 0.7);
-	font-size: 12px;
-	margin-top: 4px;
-}
-
+.error-message,
 .success-message {
-	color: rgba(0, 0, 0, 0.6);
 	font-size: 12px;
 	margin-top: 4px;
 }
