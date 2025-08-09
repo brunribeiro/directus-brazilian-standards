@@ -1,6 +1,6 @@
 # 🇧🇷 Directus Brazilian Standards
 
-**Complete Brazilian formatting extensions for Directus** - Currency (BRL), Postal Codes (CEP), and Tax IDs (CPF) with interfaces and displays.
+**Complete Brazilian formatting extensions for Directus** - Currency (BRL), Postal Codes (CEP), Tax IDs (CPF/CNPJ), and Phone Numbers with interfaces and displays.
 
 [![npm version](https://badge.fury.io/js/directus-brazilian-standards.svg)](https://badge.fury.io/js/directus-brazilian-standards)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
@@ -29,6 +29,22 @@
 - **Prevents invalid patterns** (like 111.111.111-11)
 - **Visual validation feedback**
 - **Privacy masking option** for displays
+
+### 🧾 **Brazilian CNPJ (Business Tax ID)**
+- **Live formatting** (12345678000190 → 12.345.678/0001-90)
+- **Full CNPJ validation** using official algorithm
+- **Prevents invalid patterns** (like 11.111.111/1111-11)
+- **Visual validation feedback**
+- **Stores clean numbers** in database
+
+### 📱 **Brazilian Phone**
+- **Automatic formatting** for 10/11 digits
+  - 10-digit landline: (11) 3265-4321
+  - 11-digit mobile: (11) 98765-4321
+- **Validation** of Brazilian area codes (DDD)
+- **Rules**: 10 or 11 digits; 11-digit mobiles start with 9
+- **Visual validation feedback**
+- **Stores clean numbers** in database
 
 ## 📦 Installation
 
@@ -70,6 +86,22 @@ npm install directus-brazilian-standards
 4. Enable CPF validation as needed
 ```
 
+### CNPJ Fields
+```
+1. Create field → Type: String → Max Length: 14
+2. Interface: Brazilian CNPJ
+3. Display: Brazilian CNPJ
+4. Enable CNPJ validation as needed
+```
+
+### Phone Fields
+```
+1. Create field → Type: String → Max Length: 11
+2. Interface: Brazilian Phone
+3. Display: Brazilian Phone
+4. Enable Phone format validation as needed
+```
+
 ## 📊 API Response Examples
 
 ### Currency Field
@@ -91,6 +123,20 @@ npm install directus-brazilian-standards
 ```json
 {
   "tax_id": "01958284106"     // Clean numbers for validation
+}
+```
+
+### CNPJ Field
+```json
+{
+  "business_id": "11222333000181"   // Clean numbers for integrations
+}
+```
+
+### Phone Field
+```json
+{
+  "phone": "11987654321"           // Clean numbers for validation
 }
 ```
 
@@ -125,6 +171,26 @@ npm install directus-brazilian-standards
 - **Show Placeholder for Empty**: Show placeholder for empty values
 - **Mask Digits for Privacy**: Show as ***.***.***-** for privacy
 
+### CNPJ Interface
+- **Placeholder**: Custom placeholder text (default: "XX.XXX.XXX/XXXX-XX")
+- **Required**: Make field required
+- **Validate CNPJ**: Enable full CNPJ validation with algorithm
+- **Disabled**: Disable input
+
+### CNPJ Display
+- **Show Placeholder for Empty**: Show placeholder for empty values
+- **Mask Digits for Privacy**: Show as **_.___.___/****-** for privacy
+
+### Phone Interface
+- **Placeholder**: Custom placeholder text (default: "(11) 99999-9999")
+- **Required**: Make field required
+- **Validate Phone Format**: Validate Brazilian phone format and DDD
+- **Disabled**: Disable input
+
+### Phone Display
+- **Show Placeholder for Empty**: Show placeholder for empty values
+- **Mask Digits for Privacy**: Show as (XX) XXXXX-XXXX for privacy
+
 ## 🛠️ Development
 
 This package includes both **interfaces** (for input/editing) and **displays** (for read-only views).
@@ -133,11 +199,15 @@ This package includes both **interfaces** (for input/editing) and **displays** (
 - `brazilian-currency` - Currency input with live formatting
 - `brazilian-cep` - CEP input with validation
 - `brazilian-cpf` - CPF input with validation
+- `brazilian-cnpj` - CNPJ input with validation
+- `brazilian-phone` - Phone input with formatting and validation
 
 ### Displays Included:
 - `brazilian-currency-display` - Currency display with Brazilian formatting
 - `brazilian-cep-display` - CEP display with formatting  
 - `brazilian-cpf-display` - CPF display with formatting and privacy options
+- `brazilian-cnpj-display` - CNPJ display with formatting and privacy options
+- `brazilian-phone-display` - Phone display with formatting and privacy options
 
 ## 🌟 Why Use This Extension?
 
@@ -158,7 +228,7 @@ Thoroughly tested, used in production systems
 
 ## 🔧 Requirements
 
-- **Directus**: ^10.10.0
+- **Directus**: ^10.0.0
 - **Node.js**: >=18.0.0
 
 ## 📝 Examples in Action
@@ -182,6 +252,20 @@ Database stores: "77360016"
 User types: 01958284106
 Display shows: 019.582.841-06
 Database stores: "01958284106"
+```
+
+### CNPJ Input
+```
+User types: 11222333000181
+Display shows: 11.222.333/0001-81
+Database stores: "11222333000181"
+```
+
+### Phone Input
+```
+User types: 11987654321
+Display shows: (11) 98765-4321
+Database stores: "11987654321"
 ```
 
 ## 🤝 Contributing
