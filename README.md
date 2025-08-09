@@ -202,7 +202,6 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 **Bruno Ribeiro**
 - GitHub: [@brunribeiro](https://github.com/brunribeiro)
-- Project: [Directus Renovando](https://github.com/brunribeiro/directus-renovando)
 
 ## 🙏 Acknowledgments
 
