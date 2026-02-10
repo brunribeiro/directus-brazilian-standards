@@ -1,0 +1,81 @@
+name: Publish to npm
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+concurrency:
+  group: npm-publish
+  cancel-in-progress: false
+
+jobs:
+  publish:
+    name: Build, validate and publish
+    runs-on: ubuntu-latest
+    environment: npm-publish
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build extension
+        run: npm run build
+
+      - name: Validate extension
+        run: npm run validate
+
+      - name: Check if package version is new
+        id: version_check
+        run: |
+          PACKAGE_NAME=$(node -p "require('./package.json').name")
+          PACKAGE_VERSION=$(node -p "require('./package.json').version")
+          PUBLISHED_VERSION=$(npm view "$PACKAGE_NAME" version 2>/dev/null || true)
+
+          echo "package_name=$PACKAGE_NAME" >> "$GITHUB_OUTPUT"
+          echo "package_version=$PACKAGE_VERSION" >> "$GITHUB_OUTPUT"
+
+          if [ -z "$PUBLISHED_VERSION" ]; then
+            echo "Published version not found. Will publish $PACKAGE_NAME@$PACKAGE_VERSION"
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          echo "published_version=$PUBLISHED_VERSION" >> "$GITHUB_OUTPUT"
+
+          IS_NEWER=$(node -e "
+            const next = process.argv[1];
+            const current = process.argv[2];
+            const parse = (v) => v.split('-')[0].split('.').map((x) => Number.parseInt(x, 10) || 0);
+            const [a1, a2, a3] = parse(next);
+            const [b1, b2, b3] = parse(current);
+            const newer = a1 > b1 || (a1 === b1 && (a2 > b2 || (a2 === b2 && a3 > b3)));
+            process.stdout.write(newer ? 'true' : 'false');
+          " "$PACKAGE_VERSION" "$PUBLISHED_VERSION")
+
+          if [ "$IS_NEWER" = "true" ]; then
+            echo "Version bump detected: $PUBLISHED_VERSION -> $PACKAGE_VERSION"
+            echo "should_publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "No publish. package.json version ($PACKAGE_VERSION) is not greater than npm version ($PUBLISHED_VERSION)."
+            echo "should_publish=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Publish to npm
+        if: steps.version_check.outputs.should_publish == 'true'
+        run: npm publish --provenance --access public
