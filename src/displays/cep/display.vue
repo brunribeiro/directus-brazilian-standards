@@ -9,34 +9,41 @@ import { computed } from 'vue';
 
 interface Props {
 	value?: string | null;
+	show_placeholder?: boolean;
 	showPlaceholder?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
 	value: null,
-	showPlaceholder: true,
+	show_placeholder: true,
+	showPlaceholder: undefined,
+});
+
+const showPlaceholder = computed(() => {
+	if (typeof props.show_placeholder === 'boolean') return props.show_placeholder;
+	if (typeof props.showPlaceholder === 'boolean') return props.showPlaceholder;
+	return true;
 });
 
 const hasValue = computed(() => {
-	return props.value && props.value.trim().length > 0;
+	return Boolean(props.value && props.value.trim().length > 0);
 });
 
 const formatCEP = (value: string): string => {
 	const cleanValue = value.replace(/\D/g, '');
-	
+
 	if (cleanValue.length === 0) return '';
-	if (cleanValue.length <= 2) return cleanValue;
-	if (cleanValue.length <= 5) return cleanValue.replace(/(\d{2})(\d{1,3})/, '$1.$2');
-	
-	return cleanValue.slice(0, 8).replace(/(\d{2})(\d{3})(\d{1,3})/, '$1.$2-$3');
+	if (cleanValue.length <= 5) return cleanValue;
+
+	return cleanValue.slice(0, 8).replace(/(\d{5})(\d{1,3})/, '$1-$2');
 };
 
 const formattedValue = computed(() => {
 	if (!hasValue.value) {
-		return props.showPlaceholder ? '---.---' : '';
+		return showPlaceholder.value ? '#####-###' : '';
 	}
 
-	return formatCEP(props.value!);
+	return formatCEP(props.value as string);
 });
 </script>
 

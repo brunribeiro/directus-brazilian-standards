@@ -53,7 +53,7 @@ export default defineInterface({
 			meta: {
 				width: 'half',
 				interface: 'boolean',
-				note: 'Válido formato do CPF (11 dígitos)',
+				note: 'Valida formato do CPF (11 dígitos)',
 			},
 			schema: {
 				default_value: true,

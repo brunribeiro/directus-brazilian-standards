@@ -4,7 +4,7 @@ import DisplayComponent from './display.vue';
 export default defineDisplay({
 	id: 'brazilian-cep-display',
 	name: 'Brazilian CEP',
-	description: 'Display postal codes in Brazilian format (12.345-678)',
+	description: 'Display postal codes in Brazilian format (12345-678)',
 	icon: 'location_on',
 	component: DisplayComponent,
 	types: ['string'],

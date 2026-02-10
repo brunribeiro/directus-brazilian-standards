@@ -5,6 +5,27 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [1.6.0] - 2026-02-10
+
+### Added
+- **Internal API proxy endpoint** (`brazilian-standards-proxy`) for CEP and CNPJ lookups.
+- CEP route: `GET /brazilian-standards-proxy/cep/:cep`
+- CNPJ route: `GET /brazilian-standards-proxy/cnpj/:cnpj`
+
+### Fixed
+- **Directus option bindings**: fixed snake_case vs camelCase prop mismatches that caused interface/display options to be ignored.
+- **Currency input value emission**: typing `0` now stores `0` instead of `null`.
+- **Template binding errors** in CPF and Phone interfaces (`value` reference now correctly uses `props.value`).
+- **CEP display format/placeholder** corrected to the official `12345-678` pattern.
+- **CPF/CNPJ mask placeholders** corrected in displays.
+- **CNPJ default mapping template** updated to match CNPJ.ws response structure.
+
+### Changed
+- Updated Directus host compatibility to `^10.10.0 || ^11.0.0`.
+- Upgraded `@directus/extensions-sdk` to `17.0.7`.
+- Simplified and updated README documentation.
+- Removed brittle DOM-based field update simulation in CEP/CNPJ interfaces; now relies on Directus form state updates.
+
 ## [1.5.0] - 2024-12-18
 
 ### Added

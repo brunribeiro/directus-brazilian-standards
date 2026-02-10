@@ -53,7 +53,7 @@ export default defineInterface({
 			meta: {
 				width: 'half',
 				interface: 'boolean',
-				note: 'Válido formato brasileiro',
+				note: 'Valida formato brasileiro',
 			},
 			schema: {
 				default_value: true,

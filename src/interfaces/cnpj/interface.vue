@@ -3,7 +3,7 @@
 		<div class="cnpj-input-wrapper">
 			<v-input
 				:model-value="displayValue"
-				:placeholder="placeholder || 'XX.XXX.XXX/XXXX-XX'"
+				:placeholder="placeholder || '12.345.678/0001-90'"
 				:disabled="disabled"
 				:required="required"
 				:class="{ 'has-error': hasError }"
@@ -11,8 +11,7 @@
 				@blur="validateInput"
 				@paste="handlePaste"
 			/>
-			
-			<!-- Search Button (only shown when API lookup is enabled) -->
+
 			<v-button
 				v-if="enableApiLookup && displayValue && displayValue.length >= 18"
 				class="search-button"
@@ -26,14 +25,12 @@
 				<v-icon name="search" />
 			</v-button>
 		</div>
-		
-		<!-- API Lookup Status -->
+
 		<div v-if="enableApiLookup && apiStatus" class="api-status" :class="apiStatus.type">
 			<v-icon :name="apiStatus.icon" small />
 			<span>{{ apiStatus.message }}</span>
 		</div>
-		
-		<!-- Validation Error -->
+
 		<div v-if="hasError" class="error-message">
 			<v-icon name="warning" small />
 			<span>{{ errorMessage }}</span>
@@ -42,8 +39,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch, inject, nextTick } from 'vue';
-import { formatCNPJ, cleanCNPJ, isValidCNPJ, lookupCNPJ, applyFieldMapping, type CNPJApiResponse } from '../../utils/formatters';
+import { useApi } from '@directus/extensions-sdk';
+import { computed, inject, ref, watch } from 'vue';
+import {
+	applyFieldMapping,
+	cleanCNPJ,
+	formatCNPJ,
+	isValidCNPJ,
+	lookupCNPJ,
+	type DirectusApiClient,
+} from '../../utils/formatters';
 
 interface Props {
 	value: string | null;
@@ -61,7 +66,7 @@ interface Emits {
 }
 
 const props = withDefaults(defineProps<Props>(), {
-	placeholder: 'XX.XXX.XXX/XXXX-XX',
+	placeholder: '12.345.678/0001-90',
 	disabled: false,
 	required: false,
 	validate_cnpj: true,
@@ -71,19 +76,14 @@ const props = withDefaults(defineProps<Props>(), {
 });
 
 const emit = defineEmits<Emits>();
+const api = useApi() as DirectusApiClient;
 
-// Get values context from Directus form
-const values = inject('values', ref({}));
+const values = inject('values', ref<Record<string, unknown>>({}));
+const updateValues = inject<((updates: Record<string, unknown>) => void) | null>(
+	'updateValues',
+	null
+);
 
-// Get the field update functions from Directus form context
-const fieldsStore = inject('fieldsStore', null);
-const primaryKey = inject('primaryKey', ref('+'));
-const collection = inject('collection', ref(null));
-
-// Try to get the form update function
-const updateValues = inject('updateValues', null) as ((updates: Record<string, any>) => void) | null;
-
-// Reactive state
 const hasError = ref(false);
 const errorMessage = ref('');
 const isValidCnpj = ref(false);
@@ -93,7 +93,6 @@ const apiStatus = ref<{
 	message: string;
 } | null>(null);
 
-// Computed values
 const displayValue = computed(() => {
 	if (!props.value) return '';
 	return formatCNPJ(props.value);
@@ -101,33 +100,59 @@ const displayValue = computed(() => {
 
 const enableApiLookup = computed(() => props.enable_api_lookup);
 
-const fieldMapping = computed(() => {
+const fieldMapping = computed<Record<string, string>>(() => {
 	try {
 		if (typeof props.auto_fill_mapping === 'string') {
-			return JSON.parse(props.auto_fill_mapping || '{}');
+			const parsed = JSON.parse(props.auto_fill_mapping || '{}');
+			if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+				return parsed as Record<string, string>;
+			}
+			return {};
 		}
-		return props.auto_fill_mapping || {};
+
+		if (
+			props.auto_fill_mapping &&
+			typeof props.auto_fill_mapping === 'object' &&
+			!Array.isArray(props.auto_fill_mapping)
+		) {
+			return props.auto_fill_mapping;
+		}
+
+		return {};
 	} catch {
 		return {};
 	}
 });
 
-// Methods
+const updateMappedFields = (mappedFields: Record<string, unknown>): number => {
+	const entries = Object.entries(mappedFields);
+	if (entries.length === 0) return 0;
+
+	if (typeof updateValues === 'function') {
+		updateValues(mappedFields);
+		return entries.length;
+	}
+
+	if (values?.value && typeof values.value === 'object') {
+		for (const [fieldName, value] of entries) {
+			(values.value as Record<string, unknown>)[fieldName] = value;
+		}
+		return entries.length;
+	}
+
+	return 0;
+};
+
 const updateValue = (newValue: string) => {
-	// Always clean the input, whether typed or pasted
 	const cleaned = cleanCNPJ(newValue);
-	
-	// Limit to 14 digits maximum
 	const limited = cleaned.slice(0, 14);
-	
-	emit('input', limited);
-	
-	// Clear previous errors and API status
+
+	emit('input', limited || null);
+
 	hasError.value = false;
 	errorMessage.value = '';
 	apiStatus.value = null;
-	
-	// Validate CNPJ format in real-time
+
 	if (limited && limited.length === 14) {
 		isValidCnpj.value = isValidCNPJ(limited);
 	} else {
@@ -136,232 +161,81 @@ const updateValue = (newValue: string) => {
 };
 
 const handlePaste = (event: ClipboardEvent) => {
-	// Prevent default paste behavior
 	event.preventDefault();
-	
-	// Get pasted text
 	const pastedText = event.clipboardData?.getData('text') || '';
-	
-	// Clean the pasted text (remove all non-numeric characters)
-	const cleanedText = cleanCNPJ(pastedText);
-	
-	// Limit to 14 digits (CNPJ max length)
-	const limitedText = cleanedText.slice(0, 14);
-	
-	// Update the value with cleaned text
-	updateValue(limitedText);
-	
-	console.log('CNPJ Paste:', {
-		original: pastedText,
-		cleaned: cleanedText,
-		limited: limitedText,
-		formatted: formatCNPJ(limitedText)
-	});
+	updateValue(pastedText);
 };
 
 const validateInput = () => {
 	if (!props.validate_cnpj) return;
-	
+
 	const cleaned = cleanCNPJ(props.value || '');
 	if (!cleaned) return;
-	
+
 	if (cleaned.length !== 14) {
 		hasError.value = true;
 		errorMessage.value = 'CNPJ deve ter 14 dígitos';
 		isValidCnpj.value = false;
 		return;
 	}
-	
+
 	if (!isValidCNPJ(cleaned)) {
 		hasError.value = true;
 		errorMessage.value = 'CNPJ inválido';
 		isValidCnpj.value = false;
 		return;
 	}
-	
+
 	hasError.value = false;
 	errorMessage.value = '';
 	isValidCnpj.value = true;
 };
 
-// Emit a custom event that the parent form can listen to
-const emitFieldUpdates = (fieldsToUpdate: Record<string, any>) => {
-	console.log('📡 Starting field updates simulation...', fieldsToUpdate);
-	console.log('🔍 Available form inputs on page:');
-	
-	// Debug: List all inputs on the page
-	const allInputs = document.querySelectorAll('input, select, textarea');
-	allInputs.forEach((input, index) => {
-		console.log(`Input ${index}:`, {
-			type: input.tagName,
-			name: input.getAttribute('name'),
-			id: input.id,
-			class: input.className,
-			value: (input as any).value
-		});
-	});
-	
-	// Method: Find input fields and simulate user input
-	Object.entries(fieldsToUpdate).forEach(([fieldName, value]) => {
-		setTimeout(() => {
-			try {
-				// Try multiple selectors to find the field
-				const selectors = [
-					`input[name="${fieldName}"]`,
-					`[data-field="${fieldName}"] input`,
-					`[data-field="${fieldName}"] .v-input input`,
-					`.field-${fieldName} input`,
-					`#field-${fieldName}`,
-				];
-				
-				let targetInput: HTMLInputElement | null = null;
-				for (const selector of selectors) {
-					targetInput = document.querySelector(selector) as HTMLInputElement | null;
-					if (targetInput) break;
-				}
-				
-				if (targetInput) {
-					console.log(`🎯 Found field ${fieldName}, updating...`);
-					
-					// Clear existing value
-					targetInput.value = '';
-					
-					// Set new value
-					targetInput.value = String(value);
-					
-					// Trigger events to simulate user input
-					const events = ['input', 'change', 'blur'];
-					events.forEach(eventType => {
-						const event = new Event(eventType, { bubbles: true });
-						targetInput!.dispatchEvent(event);
-					});
-					
-					// Special handling for Vue inputs
-					const vueInputEvent = new CustomEvent('update:modelValue', {
-						detail: value,
-						bubbles: true
-					});
-					targetInput.dispatchEvent(vueInputEvent);
-					
-					console.log(`✅ Field ${fieldName} updated via DOM:`, value);
-				} else {
-					console.warn(`❌ Could not find input for field: ${fieldName}`);
-					
-					// Fallback: try values context
-					if (values && values.value) {
-						values.value[fieldName] = value;
-						console.log(`🔄 Fallback: set ${fieldName} via values context`);
-					}
-				}
-			} catch (error) {
-				console.error(`❌ Error updating field ${fieldName}:`, error);
-			}
-		}, 100 * Object.keys(fieldsToUpdate).indexOf(fieldName)); // Stagger updates
-	});
-};
-
 const performApiLookup = async () => {
 	if (!enableApiLookup.value || !props.value) return;
-	
+
 	const cleaned = cleanCNPJ(props.value);
 	if (!cleaned || cleaned.length !== 14 || !isValidCNPJ(cleaned)) {
 		return;
 	}
-	
-	// Show loading status
+
 	apiStatus.value = {
 		type: 'loading',
 		icon: 'refresh',
-		message: 'Consultando dados da empresa...'
+		message: 'Consultando dados da empresa...',
 	};
-	
+
 	try {
-		const response = await lookupCNPJ(cleaned, props.api_token);
-		
-		if (response) {
-			// Apply field mapping
-			const mappedFields = applyFieldMapping(response, fieldMapping.value);
-			
-			console.log('🔍 CNPJ Debug Info:', {
-				apiResponse: response,
-				fieldMapping: fieldMapping.value,
-				mappedFields: mappedFields,
-				valuesContext: values.value,
-				updateValuesAvailable: !!updateValues,
-				fieldsStoreAvailable: !!fieldsStore,
-				collection: collection?.value,
-				primaryKey: primaryKey?.value
-			});
-			
-			let fieldsUpdated = 0;
-			
-			try {
-				// Method 1: Use the updateValues function if available
-				if (updateValues && typeof updateValues === 'function') {
-					console.log('🎯 Using updateValues function...');
-					updateValues(mappedFields);
-					fieldsUpdated = Object.keys(mappedFields).length;
-					console.log('✅ Fields updated via updateValues:', mappedFields);
-				}
-				// Method 2: Try to update via values context (fallback)
-				else if (values.value) {
-					console.log('🎯 Fallback: updating values context...');
-					Object.entries(mappedFields).forEach(([fieldName, value]) => {
-						values.value[fieldName] = value;
-						fieldsUpdated++;
-						console.log(`✅ Field ${fieldName} set:`, value);
-					});
-				}
-				
-				// Method 3: Always try DOM simulation regardless of other methods
-				console.log('🎯 Attempting DOM field updates...');
-				emitFieldUpdates(mappedFields);
-				
-				// Show success status
-				apiStatus.value = {
-					type: 'success',
-					icon: 'check',
-					message: `✅ ${response.razao_social} - ${fieldsUpdated} campos processados (verifique se foram preenchidos)`
-				};
-				
-			} catch (updateError) {
-				console.error('❌ Error updating fields:', updateError);
-				
-				// Show partial success with manual instruction
-				apiStatus.value = {
-					type: 'success',
-					icon: 'info',
-					message: `✅ Dados obtidos: ${response.razao_social}. Verifique se os campos foram preenchidos.`
-				};
-				
-				// Still emit the event so parent can try to handle it
-				emitFieldUpdates(mappedFields);
-			}
-			
-			// Clear status after 5 seconds
-			setTimeout(() => {
-				apiStatus.value = null;
-			}, 5000);
-		}
+		const response = await lookupCNPJ(api, cleaned, props.api_token);
+		const mappedFields = applyFieldMapping(response, fieldMapping.value);
+		const fieldsUpdated = updateMappedFields(mappedFields);
+
+		apiStatus.value = {
+			type: 'success',
+			icon: 'check',
+			message:
+				fieldsUpdated > 0
+					? `Dados carregados para ${response.razao_social} (${fieldsUpdated} campos atualizados).`
+					: `Dados carregados para ${response.razao_social}, mas sem campos mapeados.`,
+		};
 	} catch (error) {
-		console.error('❌ CNPJ API Error:', error);
-		
-		// Show error status
 		apiStatus.value = {
 			type: 'error',
 			icon: 'warning',
-			message: error instanceof Error ? error.message : 'Erro na consulta da API'
+			message:
+				error instanceof Error ? error.message : 'Erro na consulta da API',
 		};
-		
-		// Clear status after 5 seconds
+	} finally {
 		setTimeout(() => {
 			apiStatus.value = null;
 		}, 5000);
 	}
 };
 
-// Watch for value changes to validate
-watch(() => props.value, validateInput);
+watch(
+	() => props.value,
+	() => validateInput()
+);
 </script>
 
 <style scoped>
@@ -409,7 +283,11 @@ watch(() => props.value, validateInput);
 }
 
 @keyframes spin {
-	from { transform: rotate(0deg); }
-	to { transform: rotate(360deg); }
+	from {
+		transform: rotate(0deg);
+	}
+	to {
+		transform: rotate(360deg);
+	}
 }
-</style> 
+</style>

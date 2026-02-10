@@ -53,7 +53,7 @@ export default defineInterface({
 			meta: {
 				width: 'half',
 				interface: 'boolean',
-				note: 'Válido formato do CNPJ (14 dígitos)',
+				note: 'Valida formato do CNPJ (14 dígitos)',
 			},
 			schema: {
 				default_value: true,
@@ -66,7 +66,7 @@ export default defineInterface({
 			meta: {
 				width: 'half',
 				interface: 'boolean',
-				note: 'Busca automática de dados via ReceitaWS',
+				note: 'Busca automática de dados da empresa via CNPJ.ws',
 			},
 			schema: {
 				default_value: false,
@@ -92,14 +92,14 @@ export default defineInterface({
 				options: {
 					language: 'json',
 					template: JSON.stringify({
-						"company_name": "nome",
-						"fantasy_name": "fantasia",
-						"email": "email",
-						"phone": "telefone",
-						"address": "logradouro + ', ' + numero + ' - ' + bairro",
-						"city": "municipio",
-						"state": "uf",
-						"cep": "cep"
+						"company_name": "razao_social",
+						"fantasy_name": "estabelecimento.nome_fantasia",
+						"email": "estabelecimento.email",
+						"phone": "estabelecimento.telefone1",
+						"address": "estabelecimento.tipo_logradouro + ' ' + estabelecimento.logradouro + ', ' + estabelecimento.numero + ' - ' + estabelecimento.bairro",
+						"city": "estabelecimento.cidade.nome",
+						"state": "estabelecimento.estado.sigla",
+						"cep": "estabelecimento.cep"
 					}, null, 2),
 				},
 				note: 'Mapeamento de campos: {"campo_formulario": "campo_api"}',

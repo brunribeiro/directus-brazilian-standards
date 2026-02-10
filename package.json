@@ -1,6 +1,6 @@
 {
 	"name": "directus-brazilian-standards",
-	"version": "1.5.0",
+	"version": "1.6.0",
 	"description": "Complete Brazilian formatting extensions for Directus - Currency (BRL), Postal Codes (CEP), Tax IDs (CPF/CNPJ), and Phone Numbers with interfaces and displays",
 	"keywords": [
 		"directus",
@@ -108,9 +108,14 @@
 				"type": "display",
 				"name": "brazilian-phone-display",
 				"source": "src/displays/phone/index.ts"
+			},
+			{
+				"type": "endpoint",
+				"name": "brazilian-standards-proxy",
+				"source": "src/endpoints/brazilian-proxy/index.ts"
 			}
 		],
-		"host": "^10.0.0"
+		"host": "^10.10.0 || ^11.0.0"
 	},
 	"scripts": {
 		"build": "directus-extension build",
@@ -120,7 +125,7 @@
 		"prepublishOnly": "npm run build"
 	},
 	"devDependencies": {
-		"@directus/extensions-sdk": "13.1.1"
+		"@directus/extensions-sdk": "17.0.7"
 	},
 	"engines": {
 		"node": ">=18.0.0"

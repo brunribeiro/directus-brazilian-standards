@@ -19,7 +19,7 @@ export default defineInterface({
 				interface: 'input',
 			},
 			schema: {
-				default_value: '12.345-678',
+				default_value: '12345-678',
 			},
 		},
 		{
@@ -53,7 +53,7 @@ export default defineInterface({
 			meta: {
 				width: 'half',
 				interface: 'boolean',
-				note: 'Válido formato do CEP (8 dígitos)',
+				note: 'Valida formato do CEP (8 dígitos)',
 			},
 			schema: {
 				default_value: true,
@@ -82,7 +82,7 @@ export default defineInterface({
 				options: {
 					language: 'json',
 					template: JSON.stringify({
-						"address": "logradouro + ', ' + complemento + ' ' + bairro",
+						"address": "logradouro + ', ' + bairro",
 						"city": "localidade",
 						"state": "uf",
 						"neighborhood": "bairro",

@@ -29,7 +29,7 @@ export default defineDisplay({
 			meta: {
 				width: 'half',
 				interface: 'boolean',
-				note: 'Show as **_.___.___/****-** for privacy',
+				note: 'Show as **.***.***/****-** for privacy',
 			},
 			schema: {
 				default_value: false,
