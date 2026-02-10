@@ -31,6 +31,26 @@ jobs:
           registry-url: https://registry.npmjs.org
           cache: npm
 
+      - name: Upgrade npm (required for OIDC trusted publishing)
+        run: npm install -g npm@latest
+
+      - name: Show npm version
+        run: npm --version
+
+      - name: Verify npm supports trusted publishing
+        run: |
+          node -e "
+            const out = require('child_process').execSync('npm --version').toString().trim();
+            const parse = (v) => v.split('-')[0].split('.').map((n) => Number.parseInt(n, 10) || 0);
+            const [a,b,c] = parse(out);
+            const ok = a > 11 || (a === 11 && (b > 5 || (b === 5 && c >= 1)));
+            if (!ok) {
+              console.error('npm ' + out + ' is too old for trusted publishing. Need >= 11.5.1');
+              process.exit(1);
+            }
+            console.log('npm ' + out + ' supports trusted publishing.');
+          "
+
       - name: Install dependencies
         run: npm ci
 
@@ -78,4 +98,10 @@ jobs:
 
       - name: Publish to npm
         if: steps.version_check.outputs.should_publish == 'true'
-        run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ""
+          NPM_TOKEN: ""
+          NPM_CONFIG_PROVENANCE: "true"
+        run: |
+          npm config delete //registry.npmjs.org/:_authToken || true
+          npm publish --provenance --access public
